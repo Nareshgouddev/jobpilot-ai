@@ -25,4 +25,33 @@ export class GenerationRepository {
 
     return result.data ?? [];
   }
+
+  async listByUserId(userId: string, limit = 20): Promise<GenerationRow[]> {
+    const boundedLimit = Math.max(1, Math.min(100, limit));
+    const result = await this.db
+      .from("generations")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(boundedLimit);
+
+    throwIfError(result.error, "generations.listByUserId");
+
+    return result.data ?? [];
+  }
+
+  async listByJobAndUserId(jobId: string, userId: string, limit = 20): Promise<GenerationRow[]> {
+    const boundedLimit = Math.max(1, Math.min(100, limit));
+    const result = await this.db
+      .from("generations")
+      .select("*")
+      .eq("job_id", jobId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(boundedLimit);
+
+    throwIfError(result.error, "generations.listByJobAndUserId");
+
+    return result.data ?? [];
+  }
 }

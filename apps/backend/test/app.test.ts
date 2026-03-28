@@ -21,7 +21,7 @@ describe("createApp", () => {
   it("returns 404 payload for unknown routes", async () => {
     const app = createApp();
 
-    const response = await request(app).get("/api/not-real");
+    const response = await request(app).get("/not-real");
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe("HTTP_ERROR");
