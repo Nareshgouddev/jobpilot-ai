@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { aiGenerationRequestSchema, jobInputSchema } from "../src/schemas";
+import { aiGenerationRequestSchema, authSessionRequestSchema, authTokenResponseSchema, jobInputSchema } from "../src/schemas";
 
 describe("jobInputSchema", () => {
   it("accepts a valid job payload", () => {
@@ -49,5 +49,28 @@ describe("aiGenerationRequestSchema", () => {
     });
 
     expect(parsed.tone).toBe("formal");
+  });
+});
+
+describe("auth schemas", () => {
+  it("accepts valid session request", () => {
+    const parsed = authSessionRequestSchema.safeParse({
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      email: "user@example.com",
+      fullName: "Taylor Dev"
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects malformed token response", () => {
+    const parsed = authTokenResponseSchema.safeParse({
+      accessToken: "short",
+      tokenType: "Bearer",
+      expiresInSeconds: 0,
+      issuedAt: "bad-date"
+    });
+
+    expect(parsed.success).toBe(false);
   });
 });

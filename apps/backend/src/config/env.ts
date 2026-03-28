@@ -12,6 +12,10 @@ const envSchema = z.object({
   CLAUDE_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(20000),
   CLAUDE_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
   JWT_SECRET: z.string().trim().min(24),
+  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86400).default(900),
+  JWT_ISSUER: z.string().trim().min(2).default("jobpilot-backend"),
+  JWT_AUDIENCE: z.string().trim().min(2).default("jobpilot-extension"),
+  EXTENSION_SHARED_SECRET: z.string().trim().min(24),
   CORS_ORIGIN: z.string().trim().min(1),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info")
 });

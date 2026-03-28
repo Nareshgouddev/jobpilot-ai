@@ -25,3 +25,20 @@ export const aiGenerationRequestSchema = z.object({
 });
 
 export type AiGenerationRequest = z.infer<typeof aiGenerationRequestSchema>;
+
+export const authSessionRequestSchema = z.object({
+  userId: z.string().trim().uuid(),
+  email: emailSchema,
+  fullName: z.string().trim().min(2).max(100).optional()
+});
+
+export type AuthSessionRequest = z.infer<typeof authSessionRequestSchema>;
+
+export const authTokenResponseSchema = z.object({
+  accessToken: z.string().min(20),
+  tokenType: z.literal("Bearer"),
+  expiresInSeconds: z.number().int().positive(),
+  issuedAt: z.string().datetime()
+});
+
+export type AuthTokenResponse = z.infer<typeof authTokenResponseSchema>;

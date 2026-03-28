@@ -28,6 +28,10 @@ describe("env validation", () => {
       CLAUDE_TIMEOUT_MS: "20000",
       CLAUDE_MAX_RETRIES: "2",
       JWT_SECRET: "this_is_a_test_secret_that_is_long_enough",
+      JWT_ACCESS_TTL_SECONDS: "900",
+      JWT_ISSUER: "jobpilot-backend",
+      JWT_AUDIENCE: "jobpilot-extension",
+      EXTENSION_SHARED_SECRET: "this_is_a_test_extension_secret_key",
       CORS_ORIGIN: "http://localhost:5173",
       LOG_LEVEL: "debug"
     };
