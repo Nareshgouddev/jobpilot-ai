@@ -27,22 +27,30 @@ create table if not exists public.jobs (
 );
 
 create table if not exists public.generations (
-  id uuid primary key default gen_random_uuid(),
-  job_id uuid not null references public.jobs(id) on delete cascade,
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  tone text not null check (tone in ('formal', 'concise', 'friendly')),
-  prompt text not null,
-  output_text text not null,
-  provider text not null,
-  model text not null,
-  tokens_input integer,
-  tokens_output integer,
-  created_at timestamptz not null default now()
+    id uuid primary key default gen_random_uuid (),
+    job_id uuid not null references public.jobs (id) on delete cascade,
+    user_id uuid not null references public.profiles (id) on delete cascade,
+    tone text not null check (
+        tone in (
+            'formal',
+            'concise',
+            'friendly'
+        )
+    ),
+    prompt text not null,
+    output_text text not null,
+    provider text not null,
+    model text not null,
+    tokens_input integer,
+    tokens_output integer,
+    created_at timestamptz not null default now()
 );
 
-create index if not exists idx_jobs_user_id_created_at on public.jobs(user_id, created_at desc);
-create index if not exists idx_generations_job_id_created_at on public.generations(job_id, created_at desc);
-create index if not exists idx_generations_user_id_created_at on public.generations(user_id, created_at desc);
+create index if not exists idx_jobs_user_id_created_at on public.jobs (user_id, created_at desc);
+
+create index if not exists idx_generations_job_id_created_at on public.generations (job_id, created_at desc);
+
+create index if not exists idx_generations_user_id_created_at on public.generations (user_id, created_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -55,47 +63,42 @@ end;
 $$;
 
 drop trigger if exists trg_profiles_updated_at on public.profiles;
+
 create trigger trg_profiles_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
 
 drop trigger if exists trg_jobs_updated_at on public.jobs;
+
 create trigger trg_jobs_updated_at
 before update on public.jobs
 for each row execute function public.set_updated_at();
 
 alter table public.profiles enable row level security;
+
 alter table public.jobs enable row level security;
+
 alter table public.generations enable row level security;
 
-create policy if not exists "profiles_select_own"
-on public.profiles
-for select
-using (auth.uid() = id);
+create policy if not exists "profiles_select_own" on public.profiles for
+select using (auth.uid () = id);
 
-create policy if not exists "profiles_update_own"
-on public.profiles
-for update
-using (auth.uid() = id)
-with check (auth.uid() = id);
+create policy if not exists "profiles_update_own" on public.profiles for
+update using (auth.uid () = id)
+with
+    check (auth.uid () = id);
 
-create policy if not exists "jobs_select_own"
-on public.jobs
-for select
-using (auth.uid() = user_id);
+create policy if not exists "jobs_select_own" on public.jobs for
+select using (auth.uid () = user_id);
 
-create policy if not exists "jobs_modify_own"
-on public.jobs
-for all
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+create policy if not exists "jobs_modify_own" on public.jobs for all using (auth.uid () = user_id)
+with
+    check (auth.uid () = user_id);
 
-create policy if not exists "generations_select_own"
-on public.generations
-for select
-using (auth.uid() = user_id);
+create policy if not exists "generations_select_own" on public.generations for
+select using (auth.uid () = user_id);
 
-create policy if not exists "generations_insert_own"
-on public.generations
-for insert
-with check (auth.uid() = user_id);
+create policy if not exists "generations_insert_own" on public.generations for
+insert
+with
+    check (auth.uid () = user_id);
