@@ -8,6 +8,7 @@ import { logger } from "./config/logger.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestIdMiddleware } from "./middleware/request-id.js";
 import { authRouter } from "./routes/auth.route.js";
+import { createCoreRouter } from "./routes/core.route.js";
 import { healthRouter } from "./routes/health.route.js";
 
 export function createApp(): express.Express {
@@ -37,6 +38,7 @@ export function createApp(): express.Express {
 
   app.use("/api", healthRouter);
   app.use("/api", authRouter);
+  app.use("/api", createCoreRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);
