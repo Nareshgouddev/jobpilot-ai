@@ -1,0 +1,11 @@
+process.env.NODE_ENV = process.env.NODE_ENV ?? "test";
+process.env.PORT = process.env.PORT ?? "4000";
+process.env.SUPABASE_URL = process.env.SUPABASE_URL ?? "https://example.supabase.co";
+process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "service-role-key";
+process.env.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY ?? "claude-key";
+process.env.CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
+process.env.CLAUDE_TIMEOUT_MS = process.env.CLAUDE_TIMEOUT_MS ?? "20000";
+process.env.CLAUDE_MAX_RETRIES = process.env.CLAUDE_MAX_RETRIES ?? "2";
+process.env.JWT_SECRET = process.env.JWT_SECRET ?? "this_is_a_test_secret_that_is_long_enough";
+process.env.CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:5173";
+process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? "silent";

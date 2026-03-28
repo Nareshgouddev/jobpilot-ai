@@ -1,0 +1,29 @@
+import "dotenv/config";
+
+import { z } from "zod";
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+  SUPABASE_URL: z.string().trim().url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1),
+  CLAUDE_API_KEY: z.string().trim().min(1),
+  CLAUDE_MODEL: z.string().trim().min(1).default("claude-3-5-sonnet-20241022"),
+  CLAUDE_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(20000),
+  CLAUDE_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+  JWT_SECRET: z.string().trim().min(24),
+  CORS_ORIGIN: z.string().trim().min(1),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info")
+});
+
+const envResult = envSchema.safeParse(process.env);
+
+if (!envResult.success) {
+  const errors = envResult.error.issues
+    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    .join("; ");
+
+  throw new Error(`Invalid environment configuration: ${errors}`);
+}
+
+export const env = envResult.data;
