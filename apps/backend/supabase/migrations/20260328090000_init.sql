@@ -80,25 +80,37 @@ alter table public.jobs enable row level security;
 
 alter table public.generations enable row level security;
 
-create policy if not exists "profiles_select_own" on public.profiles for
+drop policy if exists "profiles_select_own" on public.profiles;
+
+create policy "profiles_select_own" on public.profiles for
 select using (auth.uid () = id);
 
-create policy if not exists "profiles_update_own" on public.profiles for
+drop policy if exists "profiles_update_own" on public.profiles;
+
+create policy "profiles_update_own" on public.profiles for
 update using (auth.uid () = id)
 with
     check (auth.uid () = id);
 
-create policy if not exists "jobs_select_own" on public.jobs for
+drop policy if exists "jobs_select_own" on public.jobs;
+
+create policy "jobs_select_own" on public.jobs for
 select using (auth.uid () = user_id);
 
-create policy if not exists "jobs_modify_own" on public.jobs for all using (auth.uid () = user_id)
+drop policy if exists "jobs_modify_own" on public.jobs;
+
+create policy "jobs_modify_own" on public.jobs for all using (auth.uid () = user_id)
 with
     check (auth.uid () = user_id);
 
-create policy if not exists "generations_select_own" on public.generations for
+drop policy if exists "generations_select_own" on public.generations;
+
+create policy "generations_select_own" on public.generations for
 select using (auth.uid () = user_id);
 
-create policy if not exists "generations_insert_own" on public.generations for
+drop policy if exists "generations_insert_own" on public.generations;
+
+create policy "generations_insert_own" on public.generations for
 insert
 with
-    check (auth.uid () = user_id);
+  check (auth.uid () = user_id);

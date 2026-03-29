@@ -87,8 +87,8 @@ describe("repositories", () => {
         tone: "formal",
         prompt: "prompt",
         output_text: "output",
-        provider: "anthropic",
-        model: "claude-3-5-sonnet",
+        provider: "openrouter",
+        model: "openrouter/auto",
         tokens_input: 100,
         tokens_output: 200,
         created_at: new Date().toISOString()

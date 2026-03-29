@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ClaudeApiError } from "../../src/ai/claude-client.js";
+import { OpenRouterApiError } from "../../src/ai/openrouter-client.js";
 import { CoverLetterGenerationService } from "../../src/ai/generation-service.js";
 
 describe("CoverLetterGenerationService", () => {
@@ -14,7 +14,7 @@ describe("CoverLetterGenerationService", () => {
               keyHighlights: ["React leadership", "Performance optimization"],
               coverLetter: "E".repeat(180)
             }),
-            model: "claude-test",
+            model: "openrouter/auto",
             stopReason: "end_turn",
             usage: {
               inputTokens: 120,
@@ -43,17 +43,17 @@ describe("CoverLetterGenerationService", () => {
     });
 
     expect(result.content.keyHighlights).toHaveLength(2);
-    expect(result.metadata.provider).toBe("anthropic");
+    expect(result.metadata.provider).toBe("openrouter");
   });
 
-  it("retries retryable Claude failures", async () => {
+  it("retries retryable OpenRouter failures", async () => {
     let attempts = 0;
     const service = new CoverLetterGenerationService(
       {
         async generateJsonCompletion() {
           attempts += 1;
           if (attempts === 1) {
-            throw new ClaudeApiError("rate limited", 429, true);
+            throw new OpenRouterApiError("rate limited", 429, true);
           }
 
           return {
@@ -62,7 +62,7 @@ describe("CoverLetterGenerationService", () => {
               keyHighlights: ["System design", "Cross-functional delivery"],
               coverLetter: "F".repeat(190)
             }),
-            model: "claude-test",
+            model: "openrouter/auto",
             stopReason: "end_turn",
             usage: {
               inputTokens: 110,

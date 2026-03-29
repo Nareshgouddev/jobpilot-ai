@@ -1,21 +1,21 @@
 import type { AiGenerationRequest } from "@jobpilot/shared";
 
 import { env } from "../config/env.js";
-import { ClaudeApiError, ClaudeClient, type ClaudeMessageResult } from "./claude-client.js";
+import { OpenRouterApiError, OpenRouterClient, type OpenRouterMessageResult } from "./openrouter-client.js";
 import type { GeneratedCoverLetter } from "./output-schema.js";
 import { buildCoverLetterPrompt } from "./prompt-builder.js";
 import { parseGeneratedCoverLetter } from "./response-parser.js";
 import { withRetry } from "./retry.js";
 
-export type ClaudeCompletionClient = {
-  generateJsonCompletion(prompt: string): Promise<ClaudeMessageResult>;
+export type AiCompletionClient = {
+  generateJsonCompletion(prompt: string): Promise<OpenRouterMessageResult>;
 };
 
 export type GenerationResult = {
   content: GeneratedCoverLetter;
   rawText: string;
   metadata: {
-    provider: "anthropic";
+    provider: "openrouter";
     model: string;
     inputTokens: number | null;
     outputTokens: number | null;
@@ -25,9 +25,9 @@ export type GenerationResult = {
 
 export class CoverLetterGenerationService {
   constructor(
-    private readonly client: ClaudeCompletionClient = new ClaudeClient(),
+    private readonly client: AiCompletionClient = new OpenRouterClient(),
     private readonly retryConfig = {
-      retries: env.CLAUDE_MAX_RETRIES,
+      retries: env.OPENROUTER_MAX_RETRIES,
       baseDelayMs: 250,
       maxDelayMs: 2000
     }
@@ -43,7 +43,7 @@ export class CoverLetterGenerationService {
         baseDelayMs: this.retryConfig.baseDelayMs,
         maxDelayMs: this.retryConfig.maxDelayMs,
         shouldRetry(error) {
-          return error instanceof ClaudeApiError && error.retryable;
+          return error instanceof OpenRouterApiError && error.retryable;
         }
       }
     );
@@ -54,7 +54,7 @@ export class CoverLetterGenerationService {
       content,
       rawText: response.text,
       metadata: {
-        provider: "anthropic",
+        provider: "openrouter",
         model: response.model,
         inputTokens: response.usage.inputTokens,
         outputTokens: response.usage.outputTokens,

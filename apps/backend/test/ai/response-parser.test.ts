@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ClaudeResponseParseError, parseGeneratedCoverLetter } from "../../src/ai/response-parser.js";
+import { AiResponseParseError, parseGeneratedCoverLetter } from "../../src/ai/response-parser.js";
 
 describe("parseGeneratedCoverLetter", () => {
   it("parses valid json from plain response", () => {
@@ -40,6 +40,6 @@ describe("parseGeneratedCoverLetter", () => {
           coverLetter: "tiny"
         })
       )
-    ).toThrowError(ClaudeResponseParseError);
+    ).toThrowError(AiResponseParseError);
   });
 });

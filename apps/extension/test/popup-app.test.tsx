@@ -41,8 +41,8 @@ vi.mock("../src/lib/api", () => ({
       coverLetter: "C".repeat(160)
     },
     metadata: {
-      provider: "anthropic",
-      model: "claude-test"
+      provider: "openrouter",
+      model: "openrouter/auto"
     }
   })
 }));
