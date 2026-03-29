@@ -28,6 +28,13 @@ npm run test
 
 Copy `.env.example` values into your local environment.
 
+## CI/CD
+
+GitHub Actions workflows are defined in `.github/workflows`:
+
+- `ci.yml`: runs typecheck, test, and build on pull requests and pushes to `main`/`develop`
+- `release.yml`: runs full verification on semantic tags (`v*.*.*`), packages extension/backend artifacts, and publishes a GitHub Release
+
 ## Current status
 
-Task 1 completed: monorepo and shared package foundation.
+Tasks 1-12 implemented: monorepo foundation, backend + extension functionality, testing, security hardening, and CI/CD automation.
