@@ -1,19 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { generateDraft, issueSessionToken, type GenerationResponse } from "../../lib/api";
 import { requestCapturedJobFromActiveTab } from "../../lib/runtime";
-import { getDraftProfile } from "../../lib/storage";
+import { getDraftProfile, getOrCreateIdentity } from "../../lib/storage";
 import type { CapturedJob } from "../../types/messages";
 
 export function PopupApp() {
   const [capturedJob, setCapturedJob] = useState<CapturedJob | null>(null);
+  const [profile, setProfile] = useState<{
+    email: string;
+    fullName: string;
+    skills: string[];
+    experienceSummary: string;
+  } | null>(null);
   const [profileName, setProfileName] = useState("Guest");
   const [status, setStatus] = useState("Ready");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [tone, setTone] = useState<"formal" | "concise" | "friendly">("formal");
+  const [result, setResult] = useState<GenerationResponse | null>(null);
 
   useEffect(() => {
     void (async () => {
-      const profile = await getDraftProfile();
-      if (profile?.fullName) {
-        setProfileName(profile.fullName);
+      const storedProfile = await getDraftProfile();
+      if (storedProfile?.fullName) {
+        setProfileName(storedProfile.fullName);
+        setProfile(storedProfile);
       }
     })();
   }, []);
@@ -28,7 +39,58 @@ export function PopupApp() {
     }
 
     setCapturedJob(job);
+    setResult(null);
     setStatus("Job captured. Ready for generation.");
+  }
+
+  async function handleGenerate(): Promise<void> {
+    if (!capturedJob) {
+      setStatus("Capture a job before generating a draft.");
+      return;
+    }
+
+    if (!profile || !profile.email || profile.skills.length === 0 || profile.experienceSummary.length < 20) {
+      setStatus("Complete your profile in Options before generating.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setStatus("Authenticating...");
+
+    try {
+      const identity = await getOrCreateIdentity();
+      const token = await issueSessionToken({
+        userId: identity.userId,
+        email: profile.email
+      });
+
+      setStatus("Generating tailored draft...");
+
+      const generated = await generateDraft(token.accessToken, {
+        tone,
+        job: {
+          title: capturedJob.title,
+          company: capturedJob.company,
+          location: capturedJob.location,
+          description: capturedJob.description,
+          employmentType: "other",
+          sourceUrl: capturedJob.sourceUrl
+        },
+        applicantProfile: {
+          fullName: profile.fullName,
+          skills: profile.skills,
+          experienceSummary: profile.experienceSummary
+        }
+      });
+
+      setResult(generated);
+      setStatus("Draft generated successfully.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Generation failed";
+      setStatus(message);
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   const summary = useMemo(() => {
@@ -67,11 +129,46 @@ export function PopupApp() {
         </button>
         <button
           type="button"
+          onClick={() => {
+            void handleGenerate();
+          }}
+          disabled={isGenerating}
           className="rounded-2xl bg-coral px-3 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5"
         >
-          Generate Draft
+          {isGenerating ? "Generating..." : "Generate Draft"}
         </button>
       </section>
+
+      <section className="mt-4 rounded-2xl border border-ink/10 bg-white/90 p-3">
+        <label className="font-mono text-xs uppercase tracking-[0.2em] text-ink/60" htmlFor="tone-select">
+          Tone
+        </label>
+        <select
+          id="tone-select"
+          value={tone}
+          onChange={(event) => setTone(event.target.value as "formal" | "concise" | "friendly")}
+          className="mt-2 w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-sm"
+        >
+          <option value="formal">Formal</option>
+          <option value="concise">Concise</option>
+          <option value="friendly">Friendly</option>
+        </select>
+      </section>
+
+      {result ? (
+        <section className="mt-4 space-y-3 rounded-2xl border border-aqua/30 bg-aqua/5 p-3">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-aqua">Generated Draft</p>
+          <h2 className="text-sm font-semibold">{result.output.subjectLine}</h2>
+          <ul className="list-disc space-y-1 pl-4 text-xs text-ink/80">
+            {result.output.keyHighlights.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <article className="max-h-40 overflow-auto whitespace-pre-wrap rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs leading-5">
+            {result.output.coverLetter}
+          </article>
+        </section>
+      ) : null}
 
       <footer className="mt-4 rounded-2xl border border-ink/10 bg-white/80 px-3 py-2 text-xs text-ink/70">{status}</footer>
     </main>
