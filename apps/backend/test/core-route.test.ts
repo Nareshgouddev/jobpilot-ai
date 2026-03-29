@@ -225,8 +225,8 @@ describe("core route", () => {
           tone: "formal",
           prompt: "cover-letter-prompt",
           output_text: "B".repeat(180),
-          provider: "anthropic",
-          model: "claude-test",
+          provider: "openrouter",
+          model: "openrouter/auto",
           tokens_input: 120,
           tokens_output: 220,
           created_at: new Date().toISOString()
@@ -240,8 +240,8 @@ describe("core route", () => {
             tone: "formal",
             prompt: "cover-letter-prompt",
             output_text: "B".repeat(180),
-            provider: "anthropic",
-            model: "claude-test",
+            provider: "openrouter",
+            model: "openrouter/auto",
             tokens_input: 120,
             tokens_output: 220,
             created_at: new Date().toISOString()
@@ -260,8 +260,8 @@ describe("core route", () => {
         },
         rawText: "{}",
         metadata: {
-          provider: "anthropic",
-          model: "claude-test",
+          provider: "openrouter",
+          model: "openrouter/auto",
           inputTokens: 120,
           outputTokens: 220,
           stopReason: "end_turn"

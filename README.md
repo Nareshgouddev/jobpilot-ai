@@ -3,7 +3,7 @@
 Production-focused monorepo for:
 
 - Chrome Extension (Manifest V3 + React + Tailwind)
-- Node.js Backend (Express + Supabase + Claude API)
+- Node.js Backend (Express + Supabase + OpenRouter API)
 - Shared TypeScript package (types + Zod schemas)
 
 ## Workspace layout

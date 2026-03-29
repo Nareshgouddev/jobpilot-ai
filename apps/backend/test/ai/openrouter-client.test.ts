@@ -1,22 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ClaudeApiError, ClaudeClient } from "../../src/ai/claude-client.js";
+import { OpenRouterApiError, OpenRouterClient } from "../../src/ai/openrouter-client.js";
 
-describe("ClaudeClient", () => {
+describe("OpenRouterClient", () => {
   it("returns parsed text and usage from API payload", async () => {
     const fetchFn = vi.fn<typeof fetch>().mockResolvedValue({
       ok: true,
       json: async () => ({
-        model: "claude-test",
-        stop_reason: "end_turn",
-        usage: { input_tokens: 10, output_tokens: 20 },
-        content: [{ type: "text", text: "{\"ok\":true}" }]
+        model: "openrouter/auto",
+        choices: [
+          {
+            finish_reason: "stop",
+            message: {
+              content: "{\"ok\":true}"
+            }
+          }
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 20 }
       })
     } as Response);
 
-    const client = new ClaudeClient({
+    const client = new OpenRouterClient({
       apiKey: "x",
-      model: "claude-test",
+      model: "openrouter/auto",
       timeoutMs: 1000,
       fetchFn
     });
@@ -34,14 +40,14 @@ describe("ClaudeClient", () => {
       text: async () => "rate limited"
     } as Response);
 
-    const client = new ClaudeClient({
+    const client = new OpenRouterClient({
       apiKey: "x",
-      model: "claude-test",
+      model: "openrouter/auto",
       timeoutMs: 1000,
       fetchFn
     });
 
-    await expect(client.generateJsonCompletion("hello")).rejects.toBeInstanceOf(ClaudeApiError);
+    await expect(client.generateJsonCompletion("hello")).rejects.toBeInstanceOf(OpenRouterApiError);
 
     await expect(client.generateJsonCompletion("hello")).rejects.toMatchObject({ retryable: true });
   });

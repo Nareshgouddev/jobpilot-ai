@@ -2,12 +2,12 @@ import { ZodError } from "zod";
 
 import { generatedCoverLetterSchema, type GeneratedCoverLetter } from "./output-schema.js";
 
-export class ClaudeResponseParseError extends Error {
+export class AiResponseParseError extends Error {
   public readonly causeData?: unknown;
 
   constructor(message: string, causeData?: unknown) {
     super(message);
-    this.name = "ClaudeResponseParseError";
+    this.name = "AiResponseParseError";
     this.causeData = causeData;
   }
 }
@@ -16,7 +16,7 @@ function extractFirstJsonObject(text: string): string {
   const start = text.indexOf("{");
 
   if (start === -1) {
-    throw new ClaudeResponseParseError("Claude response did not contain a JSON object");
+    throw new AiResponseParseError("AI response did not contain a JSON object");
   }
 
   let depth = 0;
@@ -32,7 +32,7 @@ function extractFirstJsonObject(text: string): string {
     }
   }
 
-  throw new ClaudeResponseParseError("Claude response contained incomplete JSON");
+  throw new AiResponseParseError("AI response contained incomplete JSON");
 }
 
 export function parseGeneratedCoverLetter(rawText: string): GeneratedCoverLetter {
@@ -43,9 +43,9 @@ export function parseGeneratedCoverLetter(rawText: string): GeneratedCoverLetter
     return generatedCoverLetterSchema.parse(json);
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new ClaudeResponseParseError("Claude JSON did not match required schema", error.flatten());
+      throw new AiResponseParseError("AI JSON did not match required schema", error.flatten());
     }
 
-    throw new ClaudeResponseParseError("Claude response JSON parsing failed", error);
+    throw new AiResponseParseError("AI response JSON parsing failed", error);
   }
 }
