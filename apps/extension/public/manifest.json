@@ -11,11 +11,11 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["storage", "tabs", "scripting", "activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": ["storage", "tabs", "activeTab"],
+  "host_permissions": ["https://*/*", "http://*/*"],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://*/*", "http://*/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

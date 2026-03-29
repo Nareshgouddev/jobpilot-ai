@@ -13,22 +13,19 @@ export async function sendMessage(message: RuntimeMessage): Promise<unknown> {
 }
 
 export async function requestCapturedJobFromActiveTab(): Promise<CapturedJob | null> {
-  if (typeof chrome === "undefined" || !chrome.tabs) {
+  if (typeof chrome === "undefined" || !chrome.runtime) {
     return null;
   }
 
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const activeTab = tabs[0];
-
-  if (!activeTab?.id) {
-    return null;
-  }
-
-  const response = (await chrome.tabs.sendMessage(activeTab.id, {
-    type: "JOBPILOT_CAPTURE_JOB"
+  const response = (await chrome.runtime.sendMessage({
+    type: "JOBPILOT_REQUEST_ACTIVE_TAB_CAPTURE"
   } as RuntimeMessage)) as RuntimeMessage | undefined;
 
-  if (!response || response.type !== "JOBPILOT_CAPTURED_JOB") {
+  if (!response || response.type !== "JOBPILOT_CAPTURE_RESULT") {
+    return null;
+  }
+
+  if (!response.ok) {
     return null;
   }
 
