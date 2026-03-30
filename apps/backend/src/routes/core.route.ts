@@ -1,4 +1,4 @@
-import { aiGenerationRequestSchema, jobInputSchema } from "@jobpilot/shared";
+import { aiGenerationRequestSchema, candidateProfileSchema, jobInputSchema } from "@jobpilot/shared";
 import createHttpError from "http-errors";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
@@ -6,12 +6,6 @@ import { z } from "zod";
 import { requireAuth } from "../auth/require-auth.js";
 import { CoverLetterGenerationService } from "../ai/generation-service.js";
 import { repositories, type Repositories } from "../db/index.js";
-
-const profileInputSchema = z.object({
-  fullName: z.string().trim().min(2).max(100),
-  skills: z.array(z.string().trim().min(1)).min(1).max(100),
-  experienceSummary: z.string().trim().min(20).max(5000)
-});
 
 const paginationQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional()
@@ -43,6 +37,20 @@ function mapProfileRow(row: {
   full_name: string;
   skills: string[];
   experience_summary: string;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postal_code: string | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  education: unknown;
+  certifications: unknown;
+  resume_storage_path: string | null;
+  resume_filename: string | null;
+  resume_mime_type: string | null;
+  resume_uploaded_at: string | null;
   created_at: string;
   updated_at: string;
 }) {
@@ -52,6 +60,19 @@ function mapProfileRow(row: {
     fullName: row.full_name,
     skills: row.skills,
     experienceSummary: row.experience_summary,
+    phone: row.phone,
+    address: row.address,
+    city: row.city,
+    state: row.state,
+    country: row.country,
+    postalCode: row.postal_code,
+    linkedinUrl: row.linkedin_url,
+    portfolioUrl: row.portfolio_url,
+    education: row.education,
+    certifications: row.certifications,
+    resumeFilename: row.resume_filename,
+    resumeMimeType: row.resume_mime_type,
+    resumeUploadedAt: row.resume_uploaded_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -148,14 +169,24 @@ export function createCoreRouter(
       throw createHttpError(401, "Unauthorized");
     }
 
-    const input = profileInputSchema.parse(request.body);
+    const input = candidateProfileSchema.parse(request.body);
 
-    const profile = await deps.repositories.profiles.upsert({
+    const profile = await deps.repositories.profiles.upsertFull({
       id: auth.sub,
       email: auth.email,
       full_name: input.fullName,
       skills: input.skills,
-      experience_summary: input.experienceSummary
+      experience_summary: input.experienceSummary,
+      phone: input.phone ?? null,
+      address: input.address ?? null,
+      city: input.city ?? null,
+      state: input.state ?? null,
+      country: input.country ?? null,
+      postal_code: input.postalCode ?? null,
+      linkedin_url: input.linkedinUrl || null,
+      portfolio_url: input.portfolioUrl || null,
+      education: input.education,
+      certifications: input.certifications
     });
 
     response.status(200).json(mapProfileRow(profile));

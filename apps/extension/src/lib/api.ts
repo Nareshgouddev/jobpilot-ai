@@ -1,8 +1,14 @@
 import {
   aiGenerationRequestSchema,
   authTokenResponseSchema,
+  candidateProfileResponseSchema,
+  candidateProfileSchema,
+  resumeUploadResponseSchema,
   type AiGenerationRequest,
-  type AuthTokenResponse
+  type AuthTokenResponse,
+  type CandidateProfile,
+  type CandidateProfileResponse,
+  type ResumeUploadResponse
 } from "@jobpilot/shared";
 import { z } from "zod";
 
@@ -68,4 +74,89 @@ export async function generateDraft(accessToken: string, payload: AiGenerationRe
   });
 
   return parseJsonResponse(response, generationResponseSchema, "Draft generation");
+}
+
+export async function getProfile(accessToken: string): Promise<CandidateProfileResponse> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/profile/me`, {
+    method: "GET",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  return parseJsonResponse(response, candidateProfileResponseSchema, "Get profile");
+}
+
+export async function updateProfile(
+  accessToken: string,
+  payload: CandidateProfile
+): Promise<CandidateProfileResponse> {
+  const env = getExtensionEnv();
+  const validated = candidateProfileSchema.parse(payload);
+
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/profile/me`, {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(validated)
+  });
+
+  return parseJsonResponse(response, candidateProfileResponseSchema, "Update profile");
+}
+
+export async function uploadResume(
+  accessToken: string,
+  file: File
+): Promise<ResumeUploadResponse> {
+  const env = getExtensionEnv();
+
+  const formData = new FormData();
+  formData.append("resume", file, file.name);
+
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/profile/resume-upload`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    },
+    body: formData
+  });
+
+  return parseJsonResponse(response, resumeUploadResponseSchema, "Resume upload");
+}
+
+export async function getResumeDownloadUrl(
+  accessToken: string
+): Promise<{ downloadUrl: string }> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/profile/resume`, {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(`Get resume URL failed (${response.status}): ${json?.error?.message ?? json}`);
+  }
+  return { downloadUrl: json.downloadUrl };
+}
+
+export async function deleteResume(accessToken: string): Promise<void> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/profile/resume`, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const fallback = await response.text();
+    throw new Error(`Delete resume failed (${response.status}): ${fallback}`);
+  }
 }

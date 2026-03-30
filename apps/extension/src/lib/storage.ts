@@ -3,6 +3,23 @@ export type DraftProfile = {
   fullName: string;
   skills: string[];
   experienceSummary: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  certifications?: string[];
+  education?: Array<{
+    institution: string;
+    degree: string;
+    fieldOfStudy?: string;
+    startYear?: string;
+    endYear?: string;
+    gpa?: string;
+  }>;
 };
 
 export type ExtensionIdentity = {
