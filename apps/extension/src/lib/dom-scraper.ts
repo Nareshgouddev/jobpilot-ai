@@ -85,10 +85,10 @@ export function scrapeJobFromPage(): CapturedJob {
         ? extractLeverJob()
         : extractGenericJob();
 
-        const rawTitle = source.title && source.title.length > 0 ? source.title : document.title;
-        const title = normalizeWhitespace(rawTitle && rawTitle.length > 0 ? rawTitle : "Untitled Role");
-  const company = normalizeWhitespace(source.company ?? "Unknown Company");
-  const location = normalizeWhitespace(source.location ?? "Unspecified");
+  const rawTitle = source.title && source.title.length > 0 ? source.title : document.title;
+  const title = trimLength(normalizeWhitespace(rawTitle && rawTitle.length > 0 ? rawTitle : "Untitled Role"), 120);
+  const company = trimLength(normalizeWhitespace(source.company ?? "Unknown Company"), 120);
+  const location = trimLength(normalizeWhitespace(source.location ?? "Unspecified"), 120);
   const description = trimLength(
     normalizeWhitespace(source.description ?? "No job description available from this page."),
     12000
