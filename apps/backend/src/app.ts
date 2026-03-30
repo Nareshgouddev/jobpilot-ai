@@ -14,6 +14,7 @@ import { createSecurityAuditMiddleware } from "./middleware/audit.js";
 import { authRouter } from "./routes/auth.route.js";
 import { createCoreRouter } from "./routes/core.route.js";
 import { healthRouter } from "./routes/health.route.js";
+import { createResumeRouter } from "./routes/resume.route.js";
 
 export function createApp(): express.Express {
   const app = express();
@@ -54,6 +55,7 @@ export function createApp(): express.Express {
   app.use("/api", authRouter);
 
   app.use("/api", createCoreRouter());
+  app.use("/api/profile", createResumeRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -77,3 +77,15 @@ export function createGeneralRateLimiter() {
     maxRequests: 60 // 60 requests per minute
   });
 }
+
+export function createUploadRateLimiter() {
+  return createRateLimiter({
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 5, // 5 uploads per minute per user
+    keyGenerator: (req: Request) => {
+      // Use authenticated user ID as key when available, fall back to IP
+      const userId = (req as Request & { auth?: { sub: string } }).auth?.sub;
+      return userId ?? req.ip ?? req.socket.remoteAddress ?? "unknown";
+    }
+  });
+}

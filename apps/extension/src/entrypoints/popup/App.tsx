@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { generateDraft, issueSessionToken, type GenerationResponse } from "../../lib/api";
+import { generateDraft, issueSessionToken, uploadResume, type GenerationResponse } from "../../lib/api";
 import { requestCapturedJobFromActiveTab } from "../../lib/runtime";
 import { getDraftProfile, getOrCreateIdentity } from "../../lib/storage";
 import type { CapturedJob } from "../../types/messages";
