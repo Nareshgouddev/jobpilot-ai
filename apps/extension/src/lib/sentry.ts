@@ -34,7 +34,9 @@ export function initializeSentry(): void {
         "MyApp_RemoveAllHighlights",
         // Network errors are often environment-specific and not actionable
         "NetworkError",
-        "Network request failed"
+        "Network request failed",
+        // Browser extension noise from third-party scripts
+        "mgt.clearMarks is not a function"
       ],
       beforeSend(event, _hint) {
         // Filter out errors that shouldn't be reported
@@ -42,6 +44,9 @@ export function initializeSentry(): void {
           const error = event.exception.values?.[0]?.value || "";
           // Don't report extension-specific errors
           if (error.includes("Extension context invalidated")) {
+            return null;
+          }
+          if (error.includes("mgt.clearMarks is not a function")) {
             return null;
           }
         }
