@@ -51,6 +51,22 @@ describe("auth route", () => {
     expect(typeof response.body.accessToken).toBe("string");
   });
 
+  it("issues a session token with VITE extension secret", async () => {
+    const app = createApp();
+
+    const response = await request(app)
+      .post("/api/auth/session")
+      .set("x-extension-key", process.env.VITE_EXTENSION_SHARED_SECRET ?? "")
+      .send({
+        userId: "550e8400-e29b-41d4-a716-446655440000",
+        email: "user@example.com"
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.tokenType).toBe("Bearer");
+    expect(typeof response.body.accessToken).toBe("string");
+  });
+
   it("returns auth identity for bearer token", async () => {
     const app = createApp();
 

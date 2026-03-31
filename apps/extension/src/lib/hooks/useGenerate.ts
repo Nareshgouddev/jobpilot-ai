@@ -1,8 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { message } from "antd";
+import { App } from "antd";
 import { generateDraft, type GenerationResponse, type AiGenerationRequest } from "../api";
 
 export function useGenerateDraft(accessToken: string | null) {
+  const { message } = App.useApp();
+
   return useMutation<GenerationResponse, Error, AiGenerationRequest>({
     mutationFn: (payload) =>
       accessToken

@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { message } from "antd";
+import { App } from "antd";
 import { computeAtsScore, getAtsHistory, type AtsScoreRequest } from "../api";
 
 export function useComputeAtsScore(accessToken: string | null) {
+  const { message } = App.useApp();
+
   return useMutation({
     mutationFn: (request: AtsScoreRequest) =>
       accessToken

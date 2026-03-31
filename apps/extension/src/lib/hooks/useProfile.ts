@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import { App } from "antd";
 import {
   getProfile,
   updateProfile,
@@ -18,6 +18,7 @@ export function useProfile(accessToken: string | null) {
 
 export function useUpdateProfile(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: (data: CandidateProfile) =>

@@ -16,6 +16,7 @@ const envSchema = z.object({
   JWT_ISSUER: z.string().trim().min(2).default("jobpilot-backend"),
   JWT_AUDIENCE: z.string().trim().min(2).default("jobpilot-extension"),
   EXTENSION_SHARED_SECRET: z.string().trim().min(24),
+  VITE_EXTENSION_SHARED_SECRET: z.string().trim().min(24).optional(),
   ADMIN_API_KEY: z.string().trim().min(24),
   SENTRY_DSN: z.string().trim().url().optional(),
   CORS_ORIGIN: z.string().trim().min(1),

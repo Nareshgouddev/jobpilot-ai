@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import { App } from "antd";
 import {
   uploadResume,
   deleteResume,
@@ -8,6 +8,7 @@ import {
 
 export function useUploadResume(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: (file: File) =>
@@ -30,6 +31,7 @@ export function useUploadResume(accessToken: string | null) {
 
 export function useDeleteResume(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: () =>
@@ -45,6 +47,8 @@ export function useDeleteResume(accessToken: string | null) {
 }
 
 export function useResumeDownloadUrl(accessToken: string | null) {
+  const { message } = App.useApp();
+
   return useMutation({
     mutationFn: () =>
       accessToken
