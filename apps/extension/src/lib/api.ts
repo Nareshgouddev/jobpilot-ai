@@ -4,11 +4,20 @@ import {
   candidateProfileResponseSchema,
   candidateProfileSchema,
   resumeUploadResponseSchema,
+  atsScoreSchema,
+  atsScoreRequestSchema,
+  applicationSchema,
+  enrichedApplicationSchema,
+  applicationStatusSchema,
   type AiGenerationRequest,
   type AuthTokenResponse,
   type CandidateProfile,
   type CandidateProfileResponse,
-  type ResumeUploadResponse
+  type ResumeUploadResponse,
+  type AtsScore,
+  type AtsScoreRequest,
+  type EnrichedApplication,
+  type ApplicationStatus
 } from "@jobpilot/shared";
 import { z } from "zod";
 
@@ -31,6 +40,12 @@ const generationResponseSchema = z.object({
 });
 
 export type GenerationResponse = z.infer<typeof generationResponseSchema>;
+export type { ApplicationStatus };
+export type {
+  AiGenerationRequest,
+  AtsScoreRequest,
+  CandidateProfileResponse
+};
 
 async function parseJsonResponse<T>(response: Response, schema: z.ZodSchema<T>, context: string): Promise<T> {
   if (!response.ok) {
@@ -158,5 +173,131 @@ export async function deleteResume(accessToken: string): Promise<void> {
   if (!response.ok) {
     const fallback = await response.text();
     throw new Error(`Delete resume failed (${response.status}): ${fallback}`);
+  }
+}
+
+// =============================================================================
+// ATS Scoring
+// =============================================================================
+
+export async function computeAtsScore(
+  accessToken: string,
+  request: AtsScoreRequest
+): Promise<AtsScore> {
+  const env = getExtensionEnv();
+  const validated = atsScoreRequestSchema.parse(request);
+
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/ats/score`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(validated)
+  });
+
+  return parseJsonResponse(response, atsScoreSchema, "ATS score computation");
+}
+
+export async function getAtsHistory(
+  accessToken: string,
+  limit = 20
+): Promise<{ scores: Array<Omit<AtsScore, "matchedRequiredSkills" | "unmatchedRequiredSkills" | "matchedPreferredSkills" | "unmatchedPreferredSkills" | "matchedSoftSkills" | "matchedDomainTerms">> }> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/ats/history?limit=${limit}`, {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(`Get ATS history failed (${response.status}): ${json?.error?.message ?? json}`);
+  }
+  return json;
+}
+
+// =============================================================================
+// Applications
+// =============================================================================
+
+export async function getApplications(
+  accessToken: string,
+  limit = 20
+): Promise<{ applications: EnrichedApplication[]; total: number }> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/applications?limit=${limit}`, {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(`Get applications failed (${response.status}): ${json?.error?.message ?? json}`);
+  }
+
+  // Validate each application against schema
+  return {
+    applications: (json.applications as unknown[]).map((app) =>
+      enrichedApplicationSchema.parse(app)
+    ),
+    total: json.total
+  };
+}
+
+export async function createApplication(
+  accessToken: string,
+  jobId: string,
+  status?: ApplicationStatus
+): Promise<EnrichedApplication> {
+  const env = getExtensionEnv();
+  const body: { jobId: string; status?: ApplicationStatus } = { jobId };
+  if (status) body.status = status;
+
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/applications`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  return parseJsonResponse(response, enrichedApplicationSchema, "Create application");
+}
+
+export async function updateApplication(
+  accessToken: string,
+  applicationId: string,
+  update: { status?: ApplicationStatus; notes?: string }
+): Promise<EnrichedApplication> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/applications/${applicationId}`, {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(update)
+  });
+
+  return parseJsonResponse(response, enrichedApplicationSchema, "Update application");
+}
+
+export async function deleteApplication(accessToken: string, applicationId: string): Promise<void> {
+  const env = getExtensionEnv();
+  const response = await fetch(`${env.VITE_API_BASE_URL}/api/applications/${applicationId}`, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const fallback = await response.text();
+    throw new Error(`Delete application failed (${response.status}): ${fallback}`);
   }
 }

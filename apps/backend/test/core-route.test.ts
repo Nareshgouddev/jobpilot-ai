@@ -51,6 +51,15 @@ describe("core route", () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }),
+        upsertFull: vi.fn().mockResolvedValue({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          email: "user@example.com",
+          full_name: "Taylor Dev",
+          skills: ["React"],
+          experience_summary: "A".repeat(40),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }),
         findByEmail: vi.fn().mockResolvedValue({
           id: "550e8400-e29b-41d4-a716-446655440000",
           email: "user@example.com",
@@ -103,6 +112,7 @@ describe("core route", () => {
     const repos = {
       profiles: {
         upsert: vi.fn(),
+        upsertFull: vi.fn(),
         findByEmail: vi.fn()
       },
       jobs: {
@@ -189,6 +199,15 @@ describe("core route", () => {
     const repos = {
       profiles: {
         upsert: vi.fn().mockResolvedValue({
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          email: "user@example.com",
+          full_name: "Taylor Dev",
+          skills: ["React"],
+          experience_summary: "A".repeat(100),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }),
+        upsertFull: vi.fn().mockResolvedValue({
           id: "550e8400-e29b-41d4-a716-446655440000",
           email: "user@example.com",
           full_name: "Taylor Dev",

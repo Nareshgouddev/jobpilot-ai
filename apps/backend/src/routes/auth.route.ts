@@ -3,10 +3,11 @@ import { Router } from "express";
 
 import { issueAccessToken } from "../auth/token.js";
 import { assertExtensionSharedSecret, requireAuth } from "../auth/require-auth.js";
+import { createAuthRateLimiter } from "../middleware/rate-limiter.js";
 
 export const authRouter = Router();
 
-authRouter.post("/auth/session", (request, response) => {
+authRouter.post("/auth/session", createAuthRateLimiter(), (request, response) => {
   assertExtensionSharedSecret(request);
 
   const input = authSessionRequestSchema.parse(request.body);

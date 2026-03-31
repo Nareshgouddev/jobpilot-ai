@@ -32,6 +32,7 @@ describe("env validation", () => {
       JWT_ISSUER: "jobpilot-backend",
       JWT_AUDIENCE: "jobpilot-extension",
       EXTENSION_SHARED_SECRET: "this_is_a_test_extension_secret_key",
+      ADMIN_API_KEY: "this_is_a_test_admin_secret_key",
       CORS_ORIGIN: "http://localhost:5173",
       LOG_LEVEL: "debug"
     };

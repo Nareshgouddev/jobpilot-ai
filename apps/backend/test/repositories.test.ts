@@ -119,7 +119,22 @@ describe("repositories", () => {
       skills: ["react"],
       experience_summary: "Experienced engineer",
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      phone: null,
+      address: null,
+      city: null,
+      state: null,
+      country: null,
+      postal_code: null,
+      linkedin_url: null,
+      portfolio_url: null,
+      education: null,
+      certifications: null,
+      resume_storage_path: null,
+      resume_filename: null,
+      resume_mime_type: null,
+      resume_uploaded_at: null,
+      resume_text: null
     };
 
     const builder = {

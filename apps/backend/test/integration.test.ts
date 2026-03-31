@@ -56,7 +56,7 @@ describe("backend integration", () => {
 
     it("validates profile field constraints", async () => {
       const res = await request(app)
-        .put("/api/profile")
+        .put("/api/profile/me")
         .send({ fullName: "x", skills: [], experienceSummary: "x" })
         .set("Authorization", "Bearer invalid.token");
 
@@ -86,7 +86,7 @@ describe("backend integration", () => {
 
   describe("generation flow", () => {
     it("requires auth for generation endpoints", async () => {
-      const res = await request(app).get("/api/generations");
+      const res = await request(app).get("/api/generations/history");
 
       expect(res.status).toBe(401);
     });
@@ -163,7 +163,7 @@ describe("backend integration", () => {
     });
 
     it("core endpoints require auth", async () => {
-      const paths = ["/api/jobs", "/api/profile/me", "/api/generations"];
+      const paths = ["/api/jobs", "/api/profile/me", "/api/generations/history"];
 
       for (const path of paths) {
         const res = await request(app).get(path);

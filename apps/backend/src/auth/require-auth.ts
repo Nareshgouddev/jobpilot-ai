@@ -23,6 +23,21 @@ function getBearerToken(request: Request): string {
   return token;
 }
 
+function normalizeSharedSecret(value: string): string {
+  const trimmed = value.trim();
+
+  // Accept common .env formatting where values are wrapped in matching quotes.
+  if (
+    trimmed.length >= 2 &&
+    ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
 export function assertExtensionSharedSecret(request: Request): void {
   const presented = request.header("x-extension-key");
 
@@ -30,8 +45,11 @@ export function assertExtensionSharedSecret(request: Request): void {
     throw createHttpError(401, "Missing extension key");
   }
 
-  const expectedBuffer = Buffer.from(env.EXTENSION_SHARED_SECRET);
-  const providedBuffer = Buffer.from(presented);
+  const expectedNormalized = normalizeSharedSecret(env.EXTENSION_SHARED_SECRET);
+  const providedNormalized = normalizeSharedSecret(presented);
+
+  const expectedBuffer = Buffer.from(expectedNormalized);
+  const providedBuffer = Buffer.from(providedNormalized);
 
   if (expectedBuffer.length !== providedBuffer.length) {
     throw createHttpError(401, "Invalid extension key");

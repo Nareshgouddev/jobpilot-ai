@@ -32,6 +32,7 @@ export class ProfileRepository {
       resume_filename?: string | null;
       resume_mime_type?: string | null;
       resume_uploaded_at?: string | null;
+      resume_text?: string | null;
     }
   ): Promise<ProfileRow> {
     const result = await this.db
@@ -72,12 +73,40 @@ export class ProfileRepository {
         resume_storage_path: null,
         resume_filename: null,
         resume_mime_type: null,
-        resume_uploaded_at: null
+        resume_uploaded_at: null,
+        resume_text: null
       })
       .eq("id", id)
       .select("*")
       .single();
 
     return unwrapResult(result, "profiles.clearResumeMetadata");
+  }
+
+  async updateResumeMetadata(
+    id: string,
+    email: string,
+    metadata: {
+      resume_storage_path: string;
+      resume_filename: string;
+      resume_mime_type: string;
+      resume_uploaded_at: string;
+      resume_text: string | null;
+    }
+  ): Promise<ProfileRow> {
+    const result = await this.db
+      .from("profiles")
+      .update({
+        resume_storage_path: metadata.resume_storage_path,
+        resume_filename: metadata.resume_filename,
+        resume_mime_type: metadata.resume_mime_type,
+        resume_uploaded_at: metadata.resume_uploaded_at,
+        resume_text: metadata.resume_text
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    return unwrapResult(result, "profiles.updateResumeMetadata");
   }
 }

@@ -3,6 +3,8 @@ import { GenerationRepository } from "./repositories/generation-repository.js";
 import { JobRepository } from "./repositories/job-repository.js";
 import { ProfileRepository } from "./repositories/profile-repository.js";
 import { ResumeRepository } from "./repositories/resume-repository.js";
+import { ApplicationRepository } from "./repositories/application-repository.js";
+import { AtsScoreRepository } from "./repositories/ats-score-repository.js";
 
 const supabase = createSupabaseAdminClient();
 
@@ -10,7 +12,9 @@ export const repositories = {
   jobs: new JobRepository(supabase),
   profiles: new ProfileRepository(supabase),
   generations: new GenerationRepository(supabase),
-  resumes: new ResumeRepository(supabase)
+  resumes: new ResumeRepository(supabase),
+  applications: new ApplicationRepository(supabase),
+  atsScores: new AtsScoreRepository(supabase)
 };
 
 export type Repositories = typeof repositories;

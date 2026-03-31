@@ -24,6 +24,7 @@ export interface Database {
           resume_filename: string | null;
           resume_mime_type: string | null;
           resume_uploaded_at: string | null;
+          resume_text: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -47,6 +48,7 @@ export interface Database {
           resume_filename?: string | null;
           resume_mime_type?: string | null;
           resume_uploaded_at?: string | null;
+          resume_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -69,6 +71,7 @@ export interface Database {
           resume_filename?: string | null;
           resume_mime_type?: string | null;
           resume_uploaded_at?: string | null;
+          resume_text?: string | null;
           updated_at?: string;
         };
       };
@@ -176,6 +179,113 @@ export interface Database {
           uploaded_at?: string;
         };
       };
+      applications: {
+        Row: {
+          id: string;
+          user_id: string;
+          job_id: string;
+          status: string;
+          applied_at: string;
+          updated_at: string;
+          notes: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          job_id: string;
+          status?: string;
+          applied_at?: string;
+          updated_at?: string;
+          notes?: string | null;
+        };
+        Update: {
+          status?: string;
+          applied_at?: string;
+          updated_at?: string;
+          notes?: string | null;
+        };
+      };
+      ats_scores: {
+        Row: {
+          id: string;
+          user_id: string;
+          job_id: string;
+          profile_snapshot: Json;
+          overall_score: number;
+          required_skills_score: number;
+          preferred_skills_score: number;
+          soft_skills_score: number;
+          domain_terms_score: number;
+          matched_required_skills: string[];
+          unmatched_required_skills: string[];
+          matched_preferred_skills: string[];
+          unmatched_preferred_skills: string[];
+          matched_soft_skills: string[];
+          matched_domain_terms: string[];
+          computed_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          job_id: string;
+          profile_snapshot: Json;
+          overall_score: number;
+          required_skills_score: number;
+          preferred_skills_score: number;
+          soft_skills_score: number;
+          domain_terms_score: number;
+          matched_required_skills?: string[];
+          unmatched_required_skills?: string[];
+          matched_preferred_skills?: string[];
+          unmatched_preferred_skills?: string[];
+          matched_soft_skills?: string[];
+          matched_domain_terms?: string[];
+          computed_at?: string;
+        };
+        Update: {
+          profile_snapshot?: Json;
+          overall_score?: number;
+          required_skills_score?: number;
+          preferred_skills_score?: number;
+          soft_skills_score?: number;
+          domain_terms_score?: number;
+          matched_required_skills?: string[];
+          unmatched_required_skills?: string[];
+          matched_preferred_skills?: string[];
+          unmatched_preferred_skills?: string[];
+          matched_soft_skills?: string[];
+          matched_domain_terms?: string[];
+          computed_at?: string;
+        };
+      };
+      keyword_mappings: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          job_id: string | null;
+          category: string;
+          keyword: string;
+          weight: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          job_id?: string | null;
+          category: string;
+          keyword: string;
+          weight?: number;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string | null;
+          job_id?: string | null;
+          category?: string;
+          keyword?: string;
+          weight?: number;
+          created_at?: string;
+        };
+      };
     };
   };
 }
@@ -188,3 +298,7 @@ export type GenerationRow = Database["public"]["Tables"]["generations"]["Row"];
 export type GenerationInsert = Database["public"]["Tables"]["generations"]["Insert"];
 export type ResumeRow = Database["public"]["Tables"]["resumebucket"]["Row"];
 export type ResumeInsert = Database["public"]["Tables"]["resumebucket"]["Insert"];
+export type ApplicationRow = Database["public"]["Tables"]["applications"]["Row"];
+export type ApplicationInsert = Database["public"]["Tables"]["applications"]["Insert"];
+export type AtsScoreRow = Database["public"]["Tables"]["ats_scores"]["Row"];
+export type AtsScoreInsert = Database["public"]["Tables"]["ats_scores"]["Insert"];

@@ -82,7 +82,10 @@ export const candidateProfileResponseSchema = candidateProfileSchema.extend({
   resumeMimeType: z.string().nullable(),
   resumeUploadedAt: z.string().datetime().nullable(),
   createdAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
+  // Override defaults from base schema to make these required in response
+  education: z.array(educationEntrySchema),
+  certifications: z.array(z.string().trim().max(200))
 });
 
 export type CandidateProfileResponse = z.infer<typeof candidateProfileResponseSchema>;
@@ -97,3 +100,83 @@ export const resumeUploadResponseSchema = z.object({
 });
 
 export type ResumeUploadResponse = z.infer<typeof resumeUploadResponseSchema>;
+
+// =============================================================================
+// Application History
+// =============================================================================
+
+export const applicationStatusSchema = z.enum([
+  "not_applied",
+  "applied",
+  "phone_screen",
+  "technical",
+  "final_round",
+  "offer",
+  "rejected",
+  "withdrawn"
+]);
+
+export type ApplicationStatus = z.infer<typeof applicationStatusSchema>;
+
+export const applicationSchema = z.object({
+  id: z.string().uuid(),
+  jobId: z.string().uuid(),
+  userId: z.string().uuid(),
+  status: applicationStatusSchema,
+  appliedAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  notes: z.string().optional()
+});
+
+export type Application = z.infer<typeof applicationSchema>;
+
+// Application with enriched job data
+export const enrichedApplicationSchema = applicationSchema.extend({
+  job: z.object({
+    id: z.string().uuid(),
+    title: z.string(),
+    company: z.string(),
+    location: z.string()
+  }).nullable()
+});
+
+export type EnrichedApplication = z.infer<typeof enrichedApplicationSchema>;
+
+// =============================================================================
+// ATS Scoring
+// =============================================================================
+
+export const atsScoreSchema = z.object({
+  overallScore: z.number().min(0).max(100),
+  requiredSkillsScore: z.number().min(0).max(100),
+  preferredSkillsScore: z.number().min(0).max(100),
+  softSkillsScore: z.number().min(0).max(100),
+  domainTermsScore: z.number().min(0).max(100),
+  matchedRequiredSkills: z.array(z.string()),
+  unmatchedRequiredSkills: z.array(z.string()),
+  matchedPreferredSkills: z.array(z.string()),
+  unmatchedPreferredSkills: z.array(z.string()),
+  matchedSoftSkills: z.array(z.string()),
+  matchedDomainTerms: z.array(z.string()),
+  analyzedAt: z.string().datetime()
+});
+
+export type AtsScore = z.infer<typeof atsScoreSchema>;
+
+export const atsScoreRequestSchema = z.object({
+  jobDescription: z.string().trim().min(20).max(12000),
+  jobTitle: z.string().trim().min(2).max(120).optional(),
+  company: z.string().trim().max(120).optional()
+});
+
+export type AtsScoreRequest = z.infer<typeof atsScoreRequestSchema>;
+
+// AI keyword extraction response (from OpenRouter)
+export const atsKeywordExtractionSchema = z.object({
+  requiredSkills: z.array(z.string()).max(15),
+  preferredSkills: z.array(z.string()).max(20),
+  softSkills: z.array(z.string()).max(15),
+  domainTerms: z.array(z.string()).max(20)
+});
+
+export type AtsKeywordExtraction = z.infer<typeof atsKeywordExtractionSchema>;

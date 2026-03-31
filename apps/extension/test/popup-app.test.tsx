@@ -2,14 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/lib/storage", () => ({
-  getDraftProfile: vi.fn().mockResolvedValue({
-    email: "user@example.com",
-    fullName: "Taylor Dev",
-    skills: ["React", "TypeScript"],
-    experienceSummary: "A".repeat(100)
-  }),
   getOrCreateIdentity: vi.fn().mockResolvedValue({
-    userId: "550e8400-e29b-41d4-a716-446655440000"
+    userId: "550e8400-e29b-41d4-a716-446655440000",
+    email: "user@example.com"
   })
 }));
 
@@ -29,6 +24,13 @@ vi.mock("../src/lib/api", () => ({
     tokenType: "Bearer",
     expiresInSeconds: 900,
     issuedAt: new Date().toISOString()
+  }),
+  getProfile: vi.fn().mockResolvedValue({
+    fullName: "Taylor Dev",
+    email: "user@example.com",
+    skills: ["React", "TypeScript"],
+    experienceSummary: "A".repeat(120),
+    education: []
   }),
   generateDraft: vi.fn().mockResolvedValue({
     generation: {
@@ -50,27 +52,31 @@ vi.mock("../src/lib/api", () => ({
 import { PopupApp } from "../src/entrypoints/popup/App";
 
 describe("PopupApp", () => {
-  it("renders headline and action buttons", () => {
+  it("renders headline and action buttons", async () => {
     render(<PopupApp />);
 
-    expect(screen.getByText("Application Copilot")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Capture Job" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Generate Draft" })).toBeInTheDocument();
+    expect(await screen.findByText("Step 1: Capture Job")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Capture Current Job/i })).toBeInTheDocument();
   });
 
   it("captures a job and shows generation results", async () => {
     render(<PopupApp />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Capture Job" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Capture Current Job/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Frontend Engineer at Acme/i)).toBeInTheDocument();
+      expect(screen.getByText("Step 2: Generate Draft")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Generate Draft" }));
+    const generateButton = await screen.findByRole("button", { name: /Generate/i });
+    await waitFor(() => {
+      expect(generateButton).toBeEnabled();
+    });
+
+    fireEvent.click(generateButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Generated Draft")).toBeInTheDocument();
+      expect(screen.getByText("Step 3: Review & Copy")).toBeInTheDocument();
       expect(screen.getByText("Application: Frontend Engineer")).toBeInTheDocument();
     });
   });

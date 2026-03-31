@@ -24,6 +24,7 @@ export type DraftProfile = {
 
 export type ExtensionIdentity = {
   userId: string;
+  email: string;
 };
 
 const PROFILE_KEY = "jobpilot.profile";
@@ -57,19 +58,21 @@ export async function setDraftProfile(profile: DraftProfile): Promise<void> {
 export async function getOrCreateIdentity(): Promise<ExtensionIdentity> {
   if (!hasChromeStorage()) {
     return {
-      userId: "550e8400-e29b-41d4-a716-446655440000"
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      email: "local.user@jobpilot.app"
     };
   }
 
   const result = await chrome.storage.local.get(IDENTITY_KEY);
   const existing = result[IDENTITY_KEY] as ExtensionIdentity | undefined;
 
-  if (existing?.userId) {
+  if (existing?.userId && existing?.email) {
     return existing;
   }
 
   const created: ExtensionIdentity = {
-    userId: crypto.randomUUID()
+    userId: crypto.randomUUID(),
+    email: `user.${Date.now()}@jobpilot.app`
   };
 
   await chrome.storage.local.set({
