@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import { env } from "./env.js";
+import { logger } from "./logger.js";
 
 type SentryEvent = { transaction?: string };
 
@@ -52,12 +53,16 @@ const noOpErrorHandler: ErrorRequestHandler = (_error, _request, _response, next
  */
 export function initializeSentry(): void {
   if (!sentry) {
-    console.log("@sentry/node not installed, monitoring disabled");
+    if (env.NODE_ENV === "production") {
+      logger.warn("@sentry/node not installed, monitoring disabled");
+    }
     return;
   }
 
   if (!env.SENTRY_DSN) {
-    console.log("Sentry DSN not provided, monitoring disabled");
+    if (env.NODE_ENV === "production") {
+      logger.warn("Sentry DSN not provided, monitoring disabled");
+    }
     return;
   }
 
@@ -94,13 +99,13 @@ export function initializeSentry(): void {
       }
     });
 
-    console.log(`Sentry initialized with environment: ${env.NODE_ENV}`);
+    logger.info({ environment: env.NODE_ENV }, "Sentry initialized");
     sentryEnabled = true;
 
     // Capture a startup event
     sentry.captureMessage("Backend server starting", "info");
   } catch (error) {
-    console.error("Failed to initialize Sentry:", error);
+    logger.error({ error }, "Failed to initialize Sentry");
   }
 }
 
