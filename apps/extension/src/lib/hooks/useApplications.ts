@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import { App } from "antd";
 import {
   getApplications,
   createApplication,
@@ -20,6 +20,7 @@ export function useApplications(accessToken: string | null, limit = 20) {
 
 export function useCreateApplication(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: (data: { jobId: string; status?: ApplicationStatus }) =>
@@ -42,6 +43,7 @@ export function useCreateApplication(accessToken: string | null) {
 
 export function useUpdateApplication(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: (data: {
@@ -75,6 +77,7 @@ export function useUpdateApplication(accessToken: string | null) {
 
 export function useDeleteApplication(accessToken: string | null) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   return useMutation({
     mutationFn: (id: string) =>

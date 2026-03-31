@@ -48,13 +48,17 @@ export function ProfileTab() {
     return <Spin />;
   }
 
+  function parseCsv(value: unknown): string[] {
+    return String(value ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
   function handleSubmit(values: any) {
     updateMutation.mutate({
       fullName: values.fullName,
-      skills: values.skills
-        .split(",")
-        .map((s: string) => s.trim())
-        .filter((s: string) => s),
+      skills: parseCsv(values.skills),
       experienceSummary: values.experienceSummary,
       phone: values.phone || null,
       address: values.address || null,
@@ -65,10 +69,7 @@ export function ProfileTab() {
       linkedinUrl: values.linkedinUrl || null,
       portfolioUrl: values.portfolioUrl || null,
       education: educationItems,
-      certifications: values.certifications
-        .split(",")
-        .map((c: string) => c.trim())
-        .filter((c: string) => c)
+      certifications: parseCsv(values.certifications)
     });
   }
 

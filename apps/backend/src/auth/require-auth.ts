@@ -45,17 +45,21 @@ export function assertExtensionSharedSecret(request: Request): void {
     throw createHttpError(401, "Missing extension key");
   }
 
-  const expectedNormalized = normalizeSharedSecret(env.EXTENSION_SHARED_SECRET);
   const providedNormalized = normalizeSharedSecret(presented);
-
-  const expectedBuffer = Buffer.from(expectedNormalized);
   const providedBuffer = Buffer.from(providedNormalized);
 
-  if (expectedBuffer.length !== providedBuffer.length) {
-    throw createHttpError(401, "Invalid extension key");
-  }
+  const expectedSecrets = [env.EXTENSION_SHARED_SECRET, env.VITE_EXTENSION_SHARED_SECRET]
+    .filter((value): value is string => Boolean(value))
+    .map(normalizeSharedSecret)
+    .filter((value, index, values) => values.indexOf(value) === index);
 
-  if (!timingSafeEqual(expectedBuffer, providedBuffer)) {
+  const hasMatch = expectedSecrets.some((secret) => {
+    const expectedBuffer = Buffer.from(secret);
+
+    return expectedBuffer.length === providedBuffer.length && timingSafeEqual(expectedBuffer, providedBuffer);
+  });
+
+  if (!hasMatch) {
     throw createHttpError(401, "Invalid extension key");
   }
 }
