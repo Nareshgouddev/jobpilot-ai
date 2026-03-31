@@ -12,6 +12,7 @@ interface RateLimitStore {
 }
 
 const defaultStore: RateLimitStore = {};
+let limiterInstanceCounter = 0;
 
 function defaultKeyGenerator(req: Request): string {
   return req.ip || req.socket.remoteAddress || "unknown";
@@ -24,9 +25,10 @@ export function createRateLimiter(config: RateLimitConfig) {
     keyGenerator = defaultKeyGenerator,
     skipSuccessfulRequests = false
   } = config;
+  const limiterId = `limiter-${++limiterInstanceCounter}`;
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = keyGenerator(req);
+    const key = `${limiterId}:${keyGenerator(req)}`;
     const now = Date.now();
 
     // Initialize or get existing entry
@@ -53,6 +55,17 @@ export function createRateLimiter(config: RateLimitConfig) {
 
     // Increment counter
     entry.count += 1;
+
+    // Optionally do not count successful requests toward the limit.
+    // This is useful for auth endpoints where failed attempts should be limited,
+    // but valid traffic should not be throttled aggressively.
+    if (skipSuccessfulRequests) {
+      res.on("finish", () => {
+        if (res.statusCode < 400 && entry.count > 0) {
+          entry.count -= 1;
+        }
+      });
+    }
 
     // Add rate limit info to response headers
     res.set("X-RateLimit-Limit", String(maxRequests));

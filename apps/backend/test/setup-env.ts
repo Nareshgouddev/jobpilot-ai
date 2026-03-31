@@ -11,5 +11,6 @@ process.env.JWT_ACCESS_TTL_SECONDS = process.env.JWT_ACCESS_TTL_SECONDS ?? "900"
 process.env.JWT_ISSUER = process.env.JWT_ISSUER ?? "jobpilot-backend";
 process.env.JWT_AUDIENCE = process.env.JWT_AUDIENCE ?? "jobpilot-extension";
 process.env.EXTENSION_SHARED_SECRET = process.env.EXTENSION_SHARED_SECRET ?? "this_is_a_test_extension_secret_key";
+process.env.ADMIN_API_KEY = process.env.ADMIN_API_KEY ?? "this_is_a_test_admin_secret_key";
 process.env.CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:5173";
 process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? "silent";

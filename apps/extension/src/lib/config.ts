@@ -8,8 +8,11 @@ const extensionEnvSchema = z.object({
 export type ExtensionEnv = z.infer<typeof extensionEnvSchema>;
 
 export function getExtensionEnv(): ExtensionEnv {
+  const resolvedSharedSecret =
+    import.meta.env.VITE_EXTENSION_SHARED_SECRET ?? import.meta.env.EXTENSION_SHARED_SECRET;
+
   return extensionEnvSchema.parse({
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000",
-    VITE_EXTENSION_SHARED_SECRET: import.meta.env.VITE_EXTENSION_SHARED_SECRET
+    VITE_EXTENSION_SHARED_SECRET: resolvedSharedSecret
   });
 }

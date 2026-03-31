@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Request, Response, NextFunction } from "express";
 import createHttpError from "http-errors";
 import { Router } from "express";
+import { PDFParse } from "pdf-parse";
 
 import { requireAuth } from "../auth/require-auth.js";
 import { repositories } from "../db/index.js";
@@ -100,14 +101,24 @@ export function createResumeRouter(): Router {
         file_size_bytes: file.size
       });
 
-      // Update profiles table with latest resume metadata
-      await repositories.profiles.upsertFull({
-        id: auth.sub,
-        email: auth.email,
+      // Extract text from PDF for ATS scoring
+      let resumeText: string | null = null;
+      try {
+        const pdfParser = new PDFParse({ data: fileContent });
+        const textResult = await pdfParser.getText();
+        resumeText = textResult.text?.slice(0, 50000) ?? null; // Cap at 50k chars
+        await pdfParser.destroy();
+      } catch {
+        // Silently fail text extraction - resume still uploaded successfully
+      }
+
+      // Update profiles table with latest resume metadata and extracted text
+      await repositories.profiles.updateResumeMetadata(auth.sub, auth.email, {
         resume_storage_path: storagePath,
         resume_filename: file.originalFilename,
         resume_mime_type: file.mimetype,
-        resume_uploaded_at: resumeRecord.uploaded_at
+        resume_uploaded_at: resumeRecord.uploaded_at,
+        resume_text: resumeText
       });
 
       const payload = resumeUploadResponseSchema.parse({

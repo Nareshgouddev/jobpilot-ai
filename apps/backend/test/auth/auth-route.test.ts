@@ -34,6 +34,23 @@ describe("auth route", () => {
     expect(response.status).toBe(401);
   });
 
+  it("issues a session token when extension key is wrapped in quotes", async () => {
+    const app = createApp();
+    const sharedSecret = process.env.EXTENSION_SHARED_SECRET ?? "";
+
+    const response = await request(app)
+      .post("/api/auth/session")
+      .set("x-extension-key", `"${sharedSecret}"`)
+      .send({
+        userId: "550e8400-e29b-41d4-a716-446655440000",
+        email: "user@example.com"
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.tokenType).toBe("Bearer");
+    expect(typeof response.body.accessToken).toBe("string");
+  });
+
   it("returns auth identity for bearer token", async () => {
     const app = createApp();
 

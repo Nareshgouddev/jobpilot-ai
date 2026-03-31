@@ -65,8 +65,14 @@ export function parseMultipart(
     // Normalize fields: flatten single-value arrays
     const normalizedFields: Record<string, MultipartField | MultipartField[]> = {};
     for (const [key, value] of Object.entries(fields)) {
+      if (value === undefined) {
+        continue;
+      }
+
       normalizedFields[key] = Array.isArray(value)
-        ? value.map((v) => ({ name: key, value: v }))
+        ? value
+            .filter((v): v is string => v !== undefined)
+            .map((v) => ({ name: key, value: v }))
         : { name: key, value };
     }
 

@@ -7,19 +7,25 @@ import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
 import { requestIdMiddleware } from "./middleware/request-id.js";
-import { createAuthRateLimiter, createGeneralRateLimiter } from "./middleware/rate-limiter.js";
+import { createGeneralRateLimiter } from "./middleware/rate-limiter.js";
 import { createCorsPolicy, corsOptionsByCaller } from "./middleware/cors-policy.js";
 import { createCspMiddleware, MODERATE_CSP_DIRECTIVES } from "./middleware/csp.js";
 import { createSecurityAuditMiddleware } from "./middleware/audit.js";
+import { createSentryRequestHandler, createSentryErrorHandler } from "./config/sentry.js";
 import { authRouter } from "./routes/auth.route.js";
 import { createCoreRouter } from "./routes/core.route.js";
 import { healthRouter } from "./routes/health.route.js";
 import { createResumeRouter } from "./routes/resume.route.js";
+import { createAtsRouter } from "./routes/ats.route.js";
+import { createApplicationsRouter } from "./routes/applications.route.js";
+import { adminRouter } from "./routes/admin.route.js";
 
 export function createApp(): express.Express {
   const app = express();
 
   app.disable("x-powered-by");
+  // Setup Sentry request handler early
+  app.use(createSentryRequestHandler());
   app.use(helmet());
   app.use(requestIdMiddleware);
   app.use(
@@ -50,14 +56,17 @@ export function createApp(): express.Express {
 
   app.use("/api", healthRouter);
 
-  // Apply stricter rate limiter to auth endpoints
-  app.use("/api/auth", createAuthRateLimiter());
   app.use("/api", authRouter);
 
   app.use("/api", createCoreRouter());
   app.use("/api/profile", createResumeRouter());
+  app.use("/api/ats", createAtsRouter());
+  app.use("/api/applications", createApplicationsRouter());
+  app.use("/api/admin", adminRouter);
 
   app.use(notFoundHandler);
+  // Sentry error handler should be last error middleware
+  app.use(createSentryErrorHandler());
   app.use(errorHandler);
 
   return app;
