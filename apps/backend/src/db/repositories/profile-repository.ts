@@ -1,7 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { throwIfError, unwrapResult } from "../errors.js";
+import { DataAccessError, throwIfError, unwrapResult } from "../errors.js";
 import type { ProfileInsert, ProfileRow } from "../types.js";
+
+function isMissingResumeTextColumnError(error: unknown): boolean {
+  if (!(error instanceof DataAccessError)) {
+    return false;
+  }
+
+  const cause = error.causeData;
+  if (!cause || typeof cause !== "object") {
+    return false;
+  }
+
+  const message = "message" in cause && typeof cause.message === "string" ? cause.message : "";
+  const details = "details" in cause && typeof cause.details === "string" ? cause.details : "";
+  const combined = `${message} ${details}`.toLowerCase();
+
+  return combined.includes("resume_text") && combined.includes("column");
+}
 
 export class ProfileRepository {
   constructor(private readonly db: SupabaseClient) {}
@@ -67,20 +84,39 @@ export class ProfileRepository {
   }
 
   async clearResumeMetadata(id: string, email: string): Promise<ProfileRow> {
+    const baseUpdate = {
+      resume_storage_path: null,
+      resume_filename: null,
+      resume_mime_type: null,
+      resume_uploaded_at: null
+    };
+
     const result = await this.db
       .from("profiles")
       .update({
-        resume_storage_path: null,
-        resume_filename: null,
-        resume_mime_type: null,
-        resume_uploaded_at: null,
+        ...baseUpdate,
         resume_text: null
       })
       .eq("id", id)
       .select("*")
       .single();
 
-    return unwrapResult(result, "profiles.clearResumeMetadata");
+    try {
+      return unwrapResult(result, "profiles.clearResumeMetadata");
+    } catch (error) {
+      if (!isMissingResumeTextColumnError(error)) {
+        throw error;
+      }
+
+      const fallbackResult = await this.db
+        .from("profiles")
+        .update(baseUpdate)
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      return unwrapResult(fallbackResult, "profiles.clearResumeMetadata.fallback");
+    }
   }
 
   async updateResumeMetadata(
@@ -94,19 +130,38 @@ export class ProfileRepository {
       resume_text: string | null;
     }
   ): Promise<ProfileRow> {
+    const baseUpdate = {
+      resume_storage_path: metadata.resume_storage_path,
+      resume_filename: metadata.resume_filename,
+      resume_mime_type: metadata.resume_mime_type,
+      resume_uploaded_at: metadata.resume_uploaded_at
+    };
+
     const result = await this.db
       .from("profiles")
       .update({
-        resume_storage_path: metadata.resume_storage_path,
-        resume_filename: metadata.resume_filename,
-        resume_mime_type: metadata.resume_mime_type,
-        resume_uploaded_at: metadata.resume_uploaded_at,
+        ...baseUpdate,
         resume_text: metadata.resume_text
       })
       .eq("id", id)
       .select("*")
       .single();
 
-    return unwrapResult(result, "profiles.updateResumeMetadata");
+    try {
+      return unwrapResult(result, "profiles.updateResumeMetadata");
+    } catch (error) {
+      if (!isMissingResumeTextColumnError(error)) {
+        throw error;
+      }
+
+      const fallbackResult = await this.db
+        .from("profiles")
+        .update(baseUpdate)
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      return unwrapResult(fallbackResult, "profiles.updateResumeMetadata.fallback");
+    }
   }
 }
