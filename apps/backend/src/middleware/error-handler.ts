@@ -3,6 +3,7 @@ import createHttpError from "http-errors";
 import { ZodError } from "zod";
 
 import { logger } from "../config/logger.js";
+import { DataAccessError } from "../db/errors.js";
 
 export type ApiErrorResponse = {
   error: {
@@ -33,6 +34,20 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     };
 
     res.status(400).json(body);
+    return;
+  }
+
+  if (err instanceof DataAccessError) {
+    logger.error({ err }, "Data access error reached error middleware");
+
+    const body: ApiErrorResponse = {
+      error: {
+        message: "Database operation failed",
+        code: "INTERNAL_SERVER_ERROR"
+      }
+    };
+
+    res.status(500).json(body);
     return;
   }
 

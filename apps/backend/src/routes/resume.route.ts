@@ -6,6 +6,8 @@ import { Router } from "express";
 import { PDFParse } from "pdf-parse";
 
 import { requireAuth } from "../auth/require-auth.js";
+import { logger } from "../config/logger.js";
+import { DataAccessError } from "../db/errors.js";
 import { repositories } from "../db/index.js";
 import { parseMultipart } from "../middleware/multipart.js";
 import { createUploadRateLimiter } from "../middleware/rate-limiter.js";
@@ -25,6 +27,21 @@ const PDF_MAGIC_BYTES = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d]);
 function validatePdfMagicBytes(filePath: string): boolean {
   const header = readFileSync(filePath, { encoding: null, flag: "r" });
   return PDF_MAGIC_BYTES.every((byte, i) => header[i] === byte);
+}
+
+function deriveNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0] ?? "User";
+  const cleaned = localPart.replace(/[._-]+/g, " ").trim();
+  return cleaned.length > 0 ? cleaned : "User";
+}
+
+function normalizeUploadedAt(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw createHttpError(500, "Invalid uploaded timestamp from database");
+  }
+
+  return date.toISOString();
 }
 
 export function createResumeRouter(): Router {
@@ -72,7 +89,7 @@ export function createResumeRouter(): Router {
           resumeId: existing.id,
           filename: existing.filename,
           mimeType: existing.mime_type,
-          uploadedAt: existing.uploaded_at,
+          uploadedAt: normalizeUploadedAt(existing.uploaded_at),
           isDuplicate: true
         });
         response.status(200).json(payload);
@@ -91,15 +108,47 @@ export function createResumeRouter(): Router {
         throw createHttpError(500, "Failed to upload file to storage");
       }
 
+      // Ensure profile exists for resumebucket FK (resumebucket.user_id -> profiles.id).
+      const existingProfile = await repositories.profiles.findById(auth.sub);
+      if (!existingProfile) {
+        await repositories.profiles.upsert({
+          id: auth.sub,
+          email: auth.email,
+          full_name: deriveNameFromEmail(auth.email),
+          skills: [],
+          experience_summary: "Profile auto-created during resume upload."
+        });
+      }
+
       // Create resumebucket record
-      const resumeRecord = await repositories.resumes.create({
-        user_id: auth.sub,
-        storage_path: storagePath,
-        filename: file.originalFilename,
-        mime_type: file.mimetype,
-        file_hash: fileHash,
-        file_size_bytes: file.size
-      });
+      let resumeRecord;
+      try {
+        resumeRecord = await repositories.resumes.create({
+          user_id: auth.sub,
+          storage_path: storagePath,
+          filename: file.originalFilename,
+          mime_type: file.mimetype,
+          file_hash: fileHash,
+          file_size_bytes: file.size
+        });
+      } catch (error) {
+        await repositories.resumes.deleteFromStorage(storagePath);
+
+        if (error instanceof DataAccessError) {
+          logger.error(
+            {
+              userId: auth.sub,
+              email: auth.email,
+              storagePath,
+              err: error
+            },
+            "Failed to persist resume metadata after storage upload"
+          );
+          throw createHttpError(500, "Failed to persist resume metadata");
+        }
+
+        throw error;
+      }
 
       // Extract text from PDF for ATS scoring
       let resumeText: string | null = null;
@@ -112,20 +161,33 @@ export function createResumeRouter(): Router {
         // Silently fail text extraction - resume still uploaded successfully
       }
 
-      // Update profiles table with latest resume metadata and extracted text
-      await repositories.profiles.updateResumeMetadata(auth.sub, auth.email, {
-        resume_storage_path: storagePath,
-        resume_filename: file.originalFilename,
-        resume_mime_type: file.mimetype,
-        resume_uploaded_at: resumeRecord.uploaded_at,
-        resume_text: resumeText
-      });
+      // Resume upload should still succeed even if profile metadata sync fails.
+      try {
+        await repositories.profiles.updateResumeMetadata(auth.sub, auth.email, {
+          resume_storage_path: storagePath,
+          resume_filename: file.originalFilename,
+          resume_mime_type: file.mimetype,
+          resume_uploaded_at: resumeRecord.uploaded_at,
+          resume_text: resumeText
+        });
+      } catch (error) {
+        logger.warn(
+          {
+            userId: auth.sub,
+            email: auth.email,
+            storagePath,
+            resumeId: resumeRecord.id,
+            err: error
+          },
+          "Failed to update profile resume metadata after upload"
+        );
+      }
 
       const payload = resumeUploadResponseSchema.parse({
         resumeId: resumeRecord.id,
         filename: resumeRecord.filename,
         mimeType: resumeRecord.mime_type,
-        uploadedAt: resumeRecord.uploaded_at,
+        uploadedAt: normalizeUploadedAt(resumeRecord.uploaded_at),
         isDuplicate: false
       });
 

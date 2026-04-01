@@ -4,6 +4,8 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import { z } from "zod";
 
 import { requireAuth } from "../auth/require-auth.js";
+import { logger } from "../config/logger.js";
+import { DataAccessError } from "../db/errors.js";
 import { repositories, type Repositories } from "../db/index.js";
 import { AtsService } from "../ai/ats-service.js";
 
@@ -112,38 +114,53 @@ export function createAtsRouter(
 
       // If job info provided, find or create job record and persist score
       if (input.jobTitle) {
-        const jobSourceUrl = `ats:${input.jobTitle}:${input.company ?? "unknown"}`;
-        let job = await deps.repositories.jobs.findBySourceUrl(auth.sub, jobSourceUrl);
+        try {
+          const jobSourceUrl = `ats:${input.jobTitle}:${input.company ?? "unknown"}`;
+          let job = await deps.repositories.jobs.findBySourceUrl(auth.sub, jobSourceUrl);
 
-        if (!job) {
-          job = await deps.repositories.jobs.create({
+          if (!job) {
+            job = await deps.repositories.jobs.create({
+              user_id: auth.sub,
+              title: input.jobTitle,
+              company: input.company ?? "Unknown",
+              location: "Unknown",
+              description: input.jobDescription,
+              employment_type: "other",
+              source_url: jobSourceUrl,
+              metadata: { source: "ats-scoring" }
+            });
+          }
+
+          await deps.repositories.atsScores.create({
             user_id: auth.sub,
-            title: input.jobTitle,
-            company: input.company ?? "Unknown",
-            location: "Unknown",
-            description: input.jobDescription,
-            employment_type: "other",
-            source_url: jobSourceUrl,
-            metadata: { source: "ats-scoring" }
+            job_id: job.id,
+            profile_snapshot: candidateProfile as unknown as import("../db/types.js").Json,
+            overall_score: score.overallScore,
+            required_skills_score: score.requiredSkillsScore,
+            preferred_skills_score: score.preferredSkillsScore,
+            soft_skills_score: score.softSkillsScore,
+            domain_terms_score: score.domainTermsScore,
+            matched_required_skills: score.matchedRequiredSkills,
+            unmatched_required_skills: score.unmatchedRequiredSkills,
+            matched_preferred_skills: score.matchedPreferredSkills,
+            unmatched_preferred_skills: score.unmatchedPreferredSkills,
+            matched_soft_skills: score.matchedSoftSkills,
+            matched_domain_terms: score.matchedDomainTerms
           });
+        } catch (error) {
+          if (error instanceof DataAccessError) {
+            logger.warn(
+              {
+                userId: auth.sub,
+                email: auth.email,
+                err: error
+              },
+              "ATS score computed but failed to persist"
+            );
+          } else {
+            throw error;
+          }
         }
-
-        await deps.repositories.atsScores.create({
-          user_id: auth.sub,
-          job_id: job.id,
-          profile_snapshot: candidateProfile as unknown as import("../db/types.js").Json,
-          overall_score: score.overallScore,
-          required_skills_score: score.requiredSkillsScore,
-          preferred_skills_score: score.preferredSkillsScore,
-          soft_skills_score: score.softSkillsScore,
-          domain_terms_score: score.domainTermsScore,
-          matched_required_skills: score.matchedRequiredSkills,
-          unmatched_required_skills: score.unmatchedRequiredSkills,
-          matched_preferred_skills: score.matchedPreferredSkills,
-          unmatched_preferred_skills: score.unmatchedPreferredSkills,
-          matched_soft_skills: score.matchedSoftSkills,
-          matched_domain_terms: score.matchedDomainTerms
-        });
       }
 
       response.status(200).json(score);
