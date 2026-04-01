@@ -31,6 +31,40 @@ function asyncHandler(
   };
 }
 
+function normalizeProfileInput(body: unknown): unknown {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return body;
+  }
+
+  const normalized = { ...(body as Record<string, unknown>) };
+  const nullableOptionalFields = [
+    "phone",
+    "address",
+    "city",
+    "state",
+    "country",
+    "postalCode",
+    "linkedinUrl",
+    "portfolioUrl"
+  ] as const;
+
+  for (const key of nullableOptionalFields) {
+    if (normalized[key] === null) {
+      normalized[key] = undefined;
+    }
+  }
+
+  if (normalized.education === null) {
+    normalized.education = [];
+  }
+
+  if (normalized.certifications === null) {
+    normalized.certifications = [];
+  }
+
+  return normalized;
+}
+
 function mapProfileRow(row: {
   id: string;
   email: string;
@@ -54,6 +88,15 @@ function mapProfileRow(row: {
   created_at: string;
   updated_at: string;
 }) {
+  const normalizedResumeUploadedAt = (() => {
+    if (!row.resume_uploaded_at) {
+      return null;
+    }
+
+    const parsed = new Date(row.resume_uploaded_at);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  })();
+
   return {
     id: row.id,
     email: row.email,
@@ -72,7 +115,7 @@ function mapProfileRow(row: {
     certifications: row.certifications,
     resumeFilename: row.resume_filename,
     resumeMimeType: row.resume_mime_type,
-    resumeUploadedAt: row.resume_uploaded_at,
+    resumeUploadedAt: normalizedResumeUploadedAt,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -169,7 +212,7 @@ export function createCoreRouter(
       throw createHttpError(401, "Unauthorized");
     }
 
-    const input = candidateProfileSchema.parse(request.body);
+    const input = candidateProfileSchema.parse(normalizeProfileInput(request.body));
 
     const profile = await deps.repositories.profiles.upsertFull({
       id: auth.sub,
