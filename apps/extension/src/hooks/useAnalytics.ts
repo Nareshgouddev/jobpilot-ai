@@ -29,19 +29,6 @@ export function useAnalytics() {
     [track]
   );
 
-  const trackAtsScore = useCallback(
-    (overallScore: number, computeTimeMs?: number) => {
-      track({
-        name: events.ATS_SCORE_COMPUTED,
-        properties: {
-          overallScore,
-          ...(computeTimeMs && { computeTimeMs })
-        }
-      });
-    },
-    [track]
-  );
-
   const trackResumeUpload = useCallback(
     (fileSizeKb: number, fileType: string, success: boolean) => {
       track({
@@ -143,7 +130,6 @@ export function useAnalytics() {
   return {
     track,
     trackGeneration,
-    trackAtsScore,
     trackResumeUpload,
     trackApplicationCreated,
     trackApplicationStatusUpdated,

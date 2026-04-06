@@ -206,11 +206,6 @@ export const events = {
   PROFILE_UPDATED: "profile_updated",
   PROFILE_VIEWED: "profile_viewed",
 
-  // ATS events
-  ATS_SCORE_COMPUTED: "ats_score_computed",
-  ATS_SCORE_VIEWED: "ats_score_viewed",
-  ATS_HISTORY_VIEWED: "ats_history_viewed",
-
   // Application events
   APPLICATION_CREATED: "application_created",
   APPLICATION_STATUS_UPDATED: "application_status_updated",
