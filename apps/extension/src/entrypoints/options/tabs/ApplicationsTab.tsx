@@ -113,20 +113,6 @@ export function ApplicationsTab() {
       width: 120
     },
     {
-      title: "ATS Score",
-      dataIndex: ["atsScore", "overallScore"],
-      key: "atsScore",
-      render: (score: number) =>
-        score !== undefined ? (
-          <span style={{ color: score >= 80 ? "green" : "inherit" }}>
-            {Math.round(score)}%
-          </span>
-        ) : (
-          "-"
-        ),
-      width: 100
-    },
-    {
       title: "Actions",
       key: "actions",
       render: (_: any, record: any) => (

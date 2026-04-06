@@ -4,7 +4,6 @@ import {
   UserOutlined,
   FileOutlined,
   CheckCircleOutlined,
-  RiseOutlined,
   SettingOutlined
 } from "@ant-design/icons";
 
@@ -13,7 +12,6 @@ import { issueSessionToken } from "../../lib/api";
 import { getOrCreateIdentity } from "../../lib/storage";
 import { ProfileTab } from "./tabs/ProfileTab";
 import { ResumeTab } from "./tabs/ResumeTab";
-import { AtsTab } from "./tabs/AtsTab";
 import { ApplicationsTab } from "./tabs/ApplicationsTab";
 
 export function OptionsRouter() {
@@ -78,12 +76,6 @@ export function OptionsRouter() {
           label: "Resume",
           icon: <FileOutlined />,
           children: <ResumeTab />
-        },
-        {
-          key: "ats",
-          label: "ATS",
-          icon: <RiseOutlined />,
-          children: <AtsTab />
         },
         {
           key: "applications",

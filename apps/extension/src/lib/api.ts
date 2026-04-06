@@ -4,8 +4,6 @@ import {
   candidateProfileResponseSchema,
   candidateProfileSchema,
   resumeUploadResponseSchema,
-  atsScoreSchema,
-  atsScoreRequestSchema,
   applicationSchema,
   enrichedApplicationSchema,
   applicationStatusSchema,
@@ -14,8 +12,6 @@ import {
   type CandidateProfile,
   type CandidateProfileResponse,
   type ResumeUploadResponse,
-  type AtsScore,
-  type AtsScoreRequest,
   type EnrichedApplication,
   type ApplicationStatus
 } from "@jobpilot/shared";
@@ -43,7 +39,6 @@ export type GenerationResponse = z.infer<typeof generationResponseSchema>;
 export type { ApplicationStatus };
 export type {
   AiGenerationRequest,
-  AtsScoreRequest,
   CandidateProfileResponse
 };
 
@@ -174,48 +169,6 @@ export async function deleteResume(accessToken: string): Promise<void> {
     const fallback = await response.text();
     throw new Error(`Delete resume failed (${response.status}): ${fallback}`);
   }
-}
-
-// =============================================================================
-// ATS Scoring
-// =============================================================================
-
-export async function computeAtsScore(
-  accessToken: string,
-  request: AtsScoreRequest
-): Promise<AtsScore> {
-  const env = getExtensionEnv();
-  const validated = atsScoreRequestSchema.parse(request);
-
-  const response = await fetch(`${env.VITE_API_BASE_URL}/api/ats/score`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${accessToken}`
-    },
-    body: JSON.stringify(validated)
-  });
-
-  return parseJsonResponse(response, atsScoreSchema, "ATS score computation");
-}
-
-export async function getAtsHistory(
-  accessToken: string,
-  limit = 20
-): Promise<{ scores: Array<Omit<AtsScore, "matchedRequiredSkills" | "unmatchedRequiredSkills" | "matchedPreferredSkills" | "unmatchedPreferredSkills" | "matchedSoftSkills" | "matchedDomainTerms">> }> {
-  const env = getExtensionEnv();
-  const response = await fetch(`${env.VITE_API_BASE_URL}/api/ats/history?limit=${limit}`, {
-    method: "GET",
-    headers: {
-      authorization: `Bearer ${accessToken}`
-    }
-  });
-
-  const json = await response.json();
-  if (!response.ok) {
-    throw new Error(`Get ATS history failed (${response.status}): ${json?.error?.message ?? json}`);
-  }
-  return json;
 }
 
 // =============================================================================
