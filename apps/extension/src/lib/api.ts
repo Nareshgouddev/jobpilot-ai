@@ -4,7 +4,6 @@ import {
   candidateProfileResponseSchema,
   candidateProfileSchema,
   resumeUploadResponseSchema,
-  applicationSchema,
   enrichedApplicationSchema,
   applicationStatusSchema,
   type AiGenerationRequest,

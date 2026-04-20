@@ -39,5 +39,3 @@ export async function isAntdUiEnabled(): Promise<boolean> {
   const flags = await getFeatureFlags();
   return flags.uiVersion === "antd";
 }
-
-export { getFeatureFlags, setFeatureFlags };

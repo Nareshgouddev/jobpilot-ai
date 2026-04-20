@@ -57,19 +57,6 @@ export function createCspMiddleware(directives: CspDirectives = DEFAULT_CSP_DIRE
   };
 }
 
-// Stricter CSP for API (no inline scripts, no external resources)
-export const STRICT_CSP_DIRECTIVES: CspDirectives = {
-  "default-src": ["'none'"],
-  "script-src": ["'none'"],
-  "style-src": ["'none'"],
-  "img-src": ["'none'"],
-  "font-src": ["'none'"],
-  "connect-src": ["'none'"],
-  "frame-ancestors": ["'none'"],
-  "base-uri": ["'none'"],
-  "form-action": ["'none'"]
-};
-
 // Moderate CSP for serving static assets
 export const MODERATE_CSP_DIRECTIVES: CspDirectives = {
   "default-src": ["'self'"],

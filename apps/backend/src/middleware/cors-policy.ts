@@ -1,4 +1,3 @@
-import { type CorsOptions } from "cors";
 import { env } from "../config/env.js";
 
 export interface CorsPolicy {
